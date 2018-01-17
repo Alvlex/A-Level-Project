@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+/* css for the tic tac toe table */
+table {
+	border: none; border-collapse: collapse;
+	table-layout: fixed;
+	font-size: 300%;
+	width:100%;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	text-align:center;
+}
+
+/* css for the popup at the end of the game */
+.popup{ 
+	display: none;
+  	position: fixed;
+  	padding: 10px;
+  	width: 280px;
+  	left: 50%;
+ 	 margin-left: -150px;
+  	height: 200px;
+  	top: 50%;
+  	margin-top: -100px;
+  	background: #42f480;
+  	z-index: 20;
+	-webkit-box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+  	box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+}
+
+/* line for the border on the left of columns */
+.BorderLeft{ 
+	border-left: 5px solid #000; 
+	
+}
+
+/* line for the border above the rows */
+.BorderRow {
+	border-top: 5px solid #000;
+}
+
+/* css for enabled buttons in the tic tac toe table */
+.enabled { 
+	transition-duration: 0.69s;
+	width:100%; 
+	height:100%;
+	vertical-align: middle;
+}
+
+/* hover effect */
+.enabled:hover{ 
+	background-color: #ff0059;
+	color: white;
+}
+
+/* css for disabled buttons in the tic tac toe table */
+.disabled { 
+	height:100%;
+	width:100%;
+	vertical-align:middle;
+}
+</style>
+</head>
+<body onload = "onload()"> <!-- as soon as page loads, the onload() function is called -->
+<script>
+var get = new XMLHttpRequest();// ajax variable for sending GET http requests and receiving responses
+var board3;
+var won = false;
+var drawn = false;
+get.onreadystatechange = function() {// when the ready state has changed for the ajax variable (i.e. something was returned), then it does this function
+    if (get.readyState == XMLHttpRequest.DONE) {// specifying which ready state is needed (the one where something is returned) 
+       	board3 = decode(get.responseText, 3);// get the response text and decode it
+		setBoard(board3); // update the board with the new board 
+		if (getTurn() === 1){// if the next turn is for X, then check if O's have just won 
+			checkIfWon('O');
+		}
+		else if (getTurn() === 2){// same thing but for if next turn is for O, check if X's have just won 
+			checkIfWon('X');
+		}
+		if (won === false){
+			enableButtons();// if game hasn't ended, then enable the buttons for the next player 
+		}
+    }
+}
+function enableButtons(){// enables all the buttons 
+	var ID;
+	for (i = 1; i < 9; i += 3){
+		for (j = 0; j < 3; j ++){
+			ID = i + j;
+			try{
+				$('button' + ID).disabled = false;// means the user is able to press the button 
+				$('button' + ID).className = 'enabled'; // changes the css of the button (means the on-hover effect applies) 
+			}
+			catch(error){
+			}
+		}
+	}
+}
+var post = new XMLHttpRequest();
+function changeCell(id){// function for when a button is pressed 
+	if (getTurn() === 1){// since the board hasn't changed yet, this gets the turn that just went, so if the person was X 
+		$(id).innerHTML = 'X'; // replace the button with an X 
+		checkIfWon('X');
+		post.open('POST', '/server', true);
+		var message = getBoard();
+		drawn = checkIfDrawn(message);
+		post.setRequestHeader("Content-type", "application/x-www-form-urlencoded"); // setup for the POST request 
+		post.send("board=" + encode(message, 3)); // sending the actual POST request with the board variable 
+		disable();// disables the buttons 
+		if (won === false && drawn === false){ // if the game is still going, in 100 milliseconds, will send the GET request for the AI move 
+			setTimeout(sendGet, 100);
+		}
+	}
+	else if (getTurn() === 2){// does exact same thing but for other symbol, sendGet2 is just calling the AI algorithm for the other symbol 
+		$(id).innerHTML = 'O';
+		checkIfWon('O');
+		post.open('POST', '/server', true);
+		var message = getBoard();
+		drawn = checkIfDrawn(message);
+		post.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		post.send("board=" + encode(message, 3));
+		disable();
+		if (won === false && drawn === false){
+			setTimeout(sendGet2, 100);
+		}
+	}
+}
+function getTurn(){// from the current board displayed, returns the turn 
+	var board = getBoard();// gets current board that is displayed to user 
+	var count = 0;
+	for (i = 0; i < 9; i ++){
+		if (board.charAt(i) === 'X' || board.charAt(i) === 'O'){
+			count ++;
+		}
+	}
+	if (count % 2 === 1){// if the total number of symbols when divided by 2 has remainder 1, then it's O's turn (player 2) 
+		return 2;
+	}
+	else{// else, it's X's turn (player 1) 
+		return 1;
+	}
+}
+function checkIfDrawn(board){// returns if the given board is a draw or not 
+	for (i = 0; i < board.length; i ++){
+		if (board.charAt(i) === '_'){// if any space is blank, then the board is not a draw and returns false 
+			return false;
+		}
+	}// no space was blank, so it returns true (it's drawn) 
+	return true;
+}
+function onload(){// function is done as soon as page loads 
+	if (document.URL.includes('player2') && getTurn() === 1){// if URL has player2 in it and it is X's turn, get the AI move 
+		sendGet2();
+	}
+	else {
+		enableButtons();// else, enables all the buttons for the user to play 
+	}
+}
+function sendGet(){// gets the rule based AI move for if they were O's 
+	get.open('GET', '/AI/2', true);
+	get.send(null);
+}
+function sendGet2(){// gets the rule based AI move for if they were X's 
+	get.open('GET', '/AI/1', true);
+	get.send(null);
+}
+function disable(){// disables all the buttons
+	var ID = 0;
+	for (i = 1; i < 9; i += 3){
+		for (j = 0; j < 3; j ++){
+			ID = i + j;
+			try{
+				$('button' + ID).disabled = true;// means they can't be clicked
+				$('button' + ID).className = 'disabled'; // changes the css of the buttons (no on-hover effect) 
+			}
+			catch(error){
+			}
+		}
+	}
+}
+function checkIfWon(symbol){// checks if the input symbol has won 
+	var board = getBoard();
+	if (board.charAt(0) === symbol){
+		if (board.charAt(1) === symbol && board.charAt(2) === symbol){
+			outputWinner(symbol);// if they have won, ends the game and displays the popup
+			return;	// ends the function early, no need to go any further 	
+		}	
+		else if (board.charAt(3) === symbol && board.charAt(6) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+		else if (board.charAt(4) === symbol && board.charAt(8) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(1) === symbol){
+		if (board.charAt(4) === symbol && board.charAt(7) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(2) === symbol){
+		if (board.charAt(5) === symbol && board.charAt(8) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+		else if (board.charAt(4) === symbol && board.charAt(6) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(3) === symbol){
+		if (board.charAt(4) === symbol && board.charAt(5) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(6) === symbol){
+		if (board.charAt(7) === symbol && board.charAt(8) === symbol){
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (checkIfDrawn(board)){
+		outputWinner('_');// displays popup but for a draw 
+	}
+}
+var reset = new XMLHttpRequest();
+function outputWinner(symbol){
+	if (symbol === 'X'){
+		$('output').innerHTML = "Player 1 has won";
+		// changes message for the right thing 
+	}
+	else if (symbol === 'O'){
+		$('output').innerHTML = "Player 2 has won";
+	}
+	else if (symbol === '_'){
+		$('output').innerHTML = "It's a draw";
+	}
+	won = true;
+	disable();
+	show('popup1');// displays the popup 
+}
+function resetIt(menu){// buttons on popup both go this function, menu is true if main menu was pressed menu is false if reset game was pressed 
+	if (menu === true){// resets the game and then takes the user to the main menu 
+		reset.open('POST', '/reset', true);
+		reset.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		reset.send("option=3");
+		location.assign("/");
+	}
+	else{// just resets the game 
+		reset.open('POST', '/reset', true);
+		reset.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		reset.send("option=3AI");
+	}
+}
+reset.onreadystatechange = function() {// when something comes back from the reset request 
+    if (reset.readyState == XMLHttpRequest.DONE) {
+    	if (reset.responseText !== ""){// responseText is an exact replica of this html document but has a new board with all the buttons still (the board is blank again) 
+        	document.write(reset.responseText);// replaces the current html document with the responseText 
+			document.close();
+		}
+    }
+}
+function getBoard(){// returns the board that is displayed to the user 
+	var message = "";
+	for(i = 1; i < 9; i += 3){
+		for (j = 0; j < 3; j ++){
+			if ($(i + j).innerHTML === 'X'){// if the square is X, then add an X to the message 
+				message = message + "X";
+			}
+			else if ($(i + j).innerHTML === 'O'){// if the square is O, then add an O 
+				message = message + "O";
+			}
+			else{ // if the square is neither of them (i.e. a button still), then add a _ 
+				message = message + "_";
+			}
+		}
+	}
+	return message; // return the board 
+}
+function setBoard(board){// changes the board displayed to the user with the board input 
+	var brd = board.split("");
+	for (i = 0; i < brd.length; i ++){
+		if (brd[i] !== '_'){ // only cares about non-blanks, so no going back once a blank has changed (unless full reset) 
+			if (brd[i] !== $(i + 1).innerHTML){ // if it doesn't equal the corresponding square 
+				$(i + 1).innerHTML = brd[i]; // change the displayed board 
+			}			
+		}
+	}
+}
+$ = function(id) { // shortcut, so can write $(id) instead of document.getElementById(id) 
+  return document.getElementById(id);
+}
+
+var show = function(id) { // means it displays the object specified by id 
+	$(id).style.display ='block';
+}
+</script>

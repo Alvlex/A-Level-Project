@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+table { /* css for the 3x3 grid */
+	border: none;
+	border-collapse: collapse;
+	table-layout: fixed;
+	font-size: 300%;
+	width:100%;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	text-align:center;
+}
+
+.popup{ /* css for popup at end */
+	display: none; /* isnt shown atm */
+  	position: fixed;
+  	padding: 10px;
+  	width: 280px;
+  	left: 50%;
+ 	margin-left: -150px;
+  	height: 200px;
+  	top: 50%;
+  	margin-top: -100px;
+  	background: #42f480;
+  	z-index: 20;
+	-webkit-box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);/* shadows everything else */
+  	box-shadow:  0px 0px 0px 9999px rgba(0, 0, 0, 0.5);
+}
+
+.BorderLeft{ /* border to the left of columns to separate the squares (make it clearer) -only last 2 columns have this*/
+	border-left: 5px solid #000;
+}
+
+.BorderRow { /* border to the top of rows to separate the squares (make it clearer) -only last 2 rows have this */
+	border-top: 5px solid #000;
+}
+
+.enabled { /* css for enabled buttons */
+	transition-duration: 0.69s; /* enabled buttons change colour in 0.69s when mouse hovers over it */
+	width:100%; 
+	height:100%;
+	vertical-align: middle;
+}
+
+.enabled:hover{ /* on-hover effect for enabled buttons, changes colour */
+	background-color: #ff0059;
+	color: white;
+}
+.disabled { /* css for disabled buttons */
+	height:100%;
+	width:100%;
+	vertical-align:middle;
+	background-color: #4286f4;
+}
+</style>
+</head>
+<body onload="onload()">
+<script>
+var timer = setInterval(myTimer, 1000); //every second does the function myTimer()
+var get = new XMLHttpRequest();
+var board3;//variable for the board
+var post = new XMLHttpRequest();
+get.onreadystatechange = function() {
+    if (get.readyState == XMLHttpRequest.DONE) {
+       	board3 = decode(get.responseText, 3);//parses the responseText into a board variable
+       	if (board3 !== getBoard()){
+			setBoard(board3);//changes displayed board
+			if ((getTurn() === 1 && document.URL.includes('/player1')) || (getTurn() === 2 && document.URL.includes('/player2'))){
+       			enableButtons();//if it is the player's turn, enable all buttons
+        	}
+			if (getTurn() === 1){//if the next turn is for X's
+				checkIfWon('O');//check if O just won
+			}
+			else{//next turn is O
+				checkIfWon('X');//check if X just won
+			}
+		}
+		if ((getTurn() === 1 && document.URL.includes('/player2')) || (getTurn() === 2 && document.URL.includes('/player1'))){
+       		disable();//if it isn't the player's turn, disable all buttons
+       	}
+    }
+}
+function getTurn(){//returns whose turn it is
+	var board = getBoard();//gets the displayed board
+	var count = 0;
+	for (i = 0; i < 9; i ++){
+		if (board.charAt(i) === 'X' || board.charAt(i) === 'O'){
+			count ++;//counts the total number of symbols on the board
+		}
+	}
+	if (count % 2 === 1){
+		return 2;//if total count isn't divisible by 2, then it's O's turn
+	}
+	else{//if it is divisible by 2, then it's X's turn
+		return 1;
+	}
+}
+function onload(){//function done as soon as web page loads
+	disable();
+	if ((getTurn() === 2 && document.URL.includes('/player2')) || (getTurn() === 1 && document.URL.includes('/player1'))){
+    	enableButtons();//if it is the player's turn, enable all buttons
+    }
+}
+function enableButtons(){//enable all buttons
+	var ID;
+	for (i = 1; i < 9; i += 3){
+		for (j = 0; j < 3; j ++){
+			ID = i + j;
+			try{
+				$('button' + ID).disabled = false;//buttons can be pressed
+				$('button' + ID).className = 'enabled';//buttons look enabled (css changed to enabled)
+			}
+			catch(error){
+			}
+		}
+	}
+}
+function changeCell(id){//function done when button is pressed (id of button is passed through)
+	if (getTurn() === 1){
+		$(id).innerHTML = 'X';
+	}
+	else if (getTurn() === 2){
+		$(id).innerHTML = 'O';//updates the square
+	}
+	post.open('POST', '/server', true);
+	var message = getBoard();
+	post.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	post.send("board=" + encode(message, 3));//sends board variable to server
+	//After move has been made, so should be the opposite player
+	if (getTurn() === 2){
+		checkIfWon('X');//checks if X has just won
+	}
+	else if (getTurn() === 1){//checks if X's turn is now
+		checkIfWon('O');//checks if O has just won with the previous move just played
+	}
+	disable();//disables all buttons
+}
+function disable(){//function for disabling all buttons
+	var ID = 0;
+	for (i = 1; i < 9; i += 3){
+		for (j = 0; j < 3; j ++){
+			ID = i + j;
+			try{
+				$('button' + ID).disabled = true;//buttons can't be pressed
+				$('button' + ID).className = 'disabled';//buttons look disabled (css for disabled buttons is applied)
+			}
+			catch(error){
+			}
+		}
+	}
+}
+function checkIfWon(symbol){//check if the symbol specified has won the game
+	var board = getBoard();
+	if (board.charAt(0) === symbol){
+		if (board.charAt(1) === symbol && board.charAt(2) === symbol){//checks line 0, 1, 2
+			outputWinner(symbol);//goes straight to outputting the winner
+			return;		//ends the function early, no point carrying on
+		}	
+		else if (board.charAt(3) === symbol && board.charAt(6) === symbol){//line 0, 3, 6
+			outputWinner(symbol);
+			return;
+		}
+		else if (board.charAt(4) === symbol && board.charAt(8) === symbol){//line 0, 4, 8
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(1) === symbol){
+		if (board.charAt(4) === symbol && board.charAt(7) === symbol){//line 1, 4, 7
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(2) === symbol){
+		if (board.charAt(5) === symbol && board.charAt(8) === symbol){//line 2, 5, 8
+			outputWinner(symbol);
+			return;
+		}
+		else if (board.charAt(4) === symbol && board.charAt(6) === symbol){//line 2, 4, 6
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(3) === symbol){
+		if (board.charAt(4) === symbol && board.charAt(5) === symbol){//line 3, 4, 5
+			outputWinner(symbol);
+			return;
+		}
+	}
+	if (board.charAt(6) === symbol){
+		if (board.charAt(7) === symbol && board.charAt(8) === symbol){//line 6, 7, 8
+			outputWinner(symbol);
+			return;
+		}
+	}
+	checkIfDraw(board); //checks if instead of a win, the board is a draw
+}
+function checkIfDraw(board){//function for checking if there is a draw
+	for (i = 0; i < 9; i ++){
+		if (board.charAt(i) === '_'){
+			return;//there isn't a draw because there is still an empty space on the board
+		}
+	}
+	outputWinner('_');//goes straight to outputting that it is a draw
+}
+var reset = new XMLHttpRequest();
+function outputWinner(symbol){//outputs the results of the game and two choices the player can make in the form of buttons
+	if (symbol === 'X'){//chooses message based on input symbol
+		$('output').innerHTML = "Player 1 has won";
+	}
+	else if (symbol === 'O'){
+		$('output').innerHTML = "Player 2 has won";
+	}
+	else if (symbol === '_'){
+		$('output').innerHTML = "It's a draw";
+	}	
+	clearInterval(timer);//stops sending the GET request every second
+	disable();//disables all buttons
+	show('popup1');//displays the popup
+}
+function resetIt(menu){//function called when button is pressed from the popup
+	if (menu === true){//resets the board and then takes the user to the main menu
+		reset.open('POST', '/reset', true);
+		reset.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		reset.send("option=3");
+		location.assign("/");//changes the URL
+	}
+	else{//resets the board and then replaces the contents of the webpage with an html document with a new, fresh board
+		reset.open('POST', '/reset', true);
+		reset.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		reset.send("option=3x3");
+	}
+}
+reset.onreadystatechange = function() {
+    if (reset.readyState == XMLHttpRequest.DONE) {
+    	if (reset.responseText !== ""){
+        	document.write(reset.responseText);//replaces the entire page with the returned text (a new html document with fresh board)
+			document.close();
+		}
+    }
+}
+function getBoard(){//gets a board from looking at the displayed board
+	var message = "";
+	for(i = 1; i <= 7; i += 3){
+		for (j = 0; j < 3; j ++){
+			try{
+				if ($((i + j).toString()).innerHTML === "X"){//if square has an X in it, add X to the message
+					message = message + "X";
+				}
+				else if ($(i + j).innerHTML === 'O'){//if square has an O in it, add O to the message
+					message = message + "O";
+				}
+				else{//else (i.e. it is still a button), add a '_' (blank space) to the message
+					message = message + "_";
+				}
+			}
+			catch(err){
+			}
+		}
+	}
+	return message;
+}
+function setBoard(board){//set the displayed board with the board given
+	var brd = board.split("");
+	for (i = 0; i < brd.length; i ++){
+		if (brd[i] !== '_'){
+			$(i + 1).innerHTML = brd[i];//changing the inner html of the element to the board character
+		}
+	}
+}
+function myTimer(){//function repeated every second
+	get.open('GET', '/board/3', true);
+	get.send(null);//send GET request to retrieve board
+}
+$ = function(id) {//shortcut, can write $, instead of writing document.getElementById
+  return document.getElementById(id);
+}
+
+var show = function(id) {//popup initially has display set to none, so when this is called for the popup it effectively reveals the popup
+	$(id).style.display ='block';
+}
+</script>

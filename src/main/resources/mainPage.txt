@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<title>Main Menu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
+.w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+.fa-table{font-size:200px}/* symbol for the 3x3 table */
+.fa-times{font-size:115px}/* symbol for the X */
+.fa-circle-o{font-size:98px} /* symbol for the O */
+</style>
+<body>
+
+<!-- Navbar at the top, with the links -->
+<div class="w3-top">
+  <div class="w3-bar w3-red w3-card w3-left-align w3-large">
+    <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-red" href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-white">Home</a>
+    <a href="/game/3/ai/player1" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">TTT against AI</a>
+    <a href="/game/3/pvp/player1" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">TTT as P1</a>
+    <a href="/game/3/pvp/player2" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">TTT as P2</a>
+    <a href="/game/9/ai/player1" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">UTTT vs AI</a>
+    <a href="/game/9/pvp/player1" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">UTTT as P1</a>
+    <a href="/game/9/pvp/player2" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">UTTT as P2</a>
+    <button type = "button"; class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white"; onclick = "reset3()">Reset 3</button>
+	<button type = "button"; class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white"; onclick = "reset9()">Reset 9</button>
+  </div>
+
+  <!-- Navbar on small screens -->
+  <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
+  	<a href="/game/3/ai/player1" class="w3-bar-item w3-button w3-padding-large">TTT against AI</a>
+    <a href="/game/3/pvp/player1" class="w3-bar-item w3-button w3-padding-large">TTT as P1</a>
+    <a href="/game/3/pvp/player2" class="w3-bar-item w3-button w3-padding-large">TTT as P2</a>
+    <a href="/game/9/ai/player1" class="w3-bar-item w3-button w3-padding-large">UTTT vs AI</a>
+    <a href="/game/9/pvp/player1" class="w3-bar-item w3-button w3-padding-large">UTTT as P1</a>
+    <a href="/game/9/pvp/player2" class="w3-bar-item w3-button w3-padding-large">UTTT as P2</a>
+    <button type = "button"; class="w3-bar-item w3-button w3-padding-large"; onclick = "reset3()">Reset 3</button>
+	<button type = "button"; class="w3-bar-item w3-button w3-padding-large"; onclick = "reset9()">Reset 9</button>
+  </div>
+</div>
+
+<!-- Header with subtitle -->
+<header class="w3-container w3-red w3-center" style="padding:128px 16px">
+  <h1 class="w3-margin w3-jumbo">Tic Tac Toe Game</h1>
+  <p class="w3-xlarge">With Ultimate Tic Tac Toe and versions to play against AI</p>
+</header>
+
+<!-- Tic tac toe explanation -->
+<div class="w3-row-padding w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-twothird">
+      <h1>Tic Tac Toe Rules</h1>
+      <h5 class="w3-padding-32">How to play</h5>
+      <p class="w3-text-grey">There is a 3x3 grid of squares. You take it in turn to play your piece on the board. The aim of the game is to get 3 of your pieces in a row.</p>
+    </div>
+
+    <div class="w3-third w3-center">
+    <!-- symbol here -->
+      <i class="fa fa-table w3-padding-64 w3-text-red"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Ultimate tic tac toe explanation -->
+<div class="w3-row-padding w3-light-grey w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-third w3-center">
+    	<!-- symbols are here -->
+      <i class="fa fa-times w3-padding-64 w3-text-red w3-margin-right"></i>
+      <i class="fa fa-circle-o w3-padding-64 w3-text-red w3-margin-right"></i>
+    </div>
+
+    <div class="w3-twothird">
+      <h1>Ultimate Tic Tac Toe</h1>
+      <h5 class="w3-padding-32">How to play</h5>
+      <p class="w3-text-grey">In this game, there are 9 3x3 grids (minisquares). These are organised so there 
+      is a bigger 3x3 grid. You can win a minisquare by getting a 3 in a row in it. The aim of the game is to 
+      get a 3 in a row in the larger 3x3 (so win 3 minisquares in a row!). BUT, there is a catch; where you go 
+      in a minisquare dictates which minisquare the next player plays in. Example: When I start, I can go 
+      anywhere, so I choose to go in the very top left square. This square is the first square in the minisquare 
+      that it's a part of (the top left 3x3), so the next player can only play in the first minisquare (top left 3x3).
+      The minisquares are numbered 1-3 along the top row, then 4-6 on the middle row and 7-9 along the bottom row just for reference.</p>
+    </div>
+  </div>
+</div>
+
+<div class="w3-container w3-black w3-center w3-opacity w3-padding-64">
+    <h1 class="w3-margin w3-xlarge">Quote of the day: Tic Tac Toe is love, Tic Tac Toe is life</h1>
+</div>
+
+<!-- Footer -->
+<footer class="w3-container w3-padding-64 w3-center w3-opacity">  
+  <div class="w3-xlarge w3-padding-32">
+	<a href="https://www.w3schools.com/w3css/w3css_templates.asp">URL to template</a>
+ </div>
+ <p>Have fun~~ ✧･ﾟ: *✧･ﾟ:*( ͡ᵔ ͜ʖ ͡ᵔ )*:･ﾟ✧*:･ﾟ✧</p>
+</footer>
+
+<script>
+// Used to toggle the menu on small screens when clicking on the menu button
+function myFunction() {
+    var x = document.getElementById("navDemo");
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+    } else { 
+        x.className = x.className.replace(" w3-show", "");
+    }
+}
+var post = new XMLHttpRequest();
+function reset3(){//functions used by the reset3 and reset9 buttons
+	post.open('POST', '/reset', true);
+	post.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	post.send("option=3");//sends post request to reset the respective boards without getting anything back
+}
+function reset9(){
+	post.open('POST', '/reset', true);
+	post.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	post.send("option=9");
+}
+</script>
+</body>
+</html>
